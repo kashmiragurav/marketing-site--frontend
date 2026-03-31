@@ -1,0 +1,344 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   CARTX DESIGN TOKENS — LIGHT MODE
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Accent (interactive elements) */
+  --accent:           #2563eb;
+  --accent-hover:     #1d4ed8;
+  --accent-light:     #dbeafe;
+  --accent-text:      #1e40af;
+
+  /* ── Page surfaces */
+  --bg:               #f8fafc;
+  --surface:          #ffffff;
+  --surface-raised:   #f1f5f9;
+  --border:           #e2e8f0;
+  --border-strong:    #cbd5e1;
+
+  /* ── Topbar (always dark) */
+  --topbar-bg:        #0f172a;
+  --topbar-border:    rgba(255,255,255,0.08);
+  --topbar-text:      #e2e8f0;
+  --topbar-muted:     #94a3b8;
+
+  /* ── Sidebar (light theme = white) */
+  --sidebar-bg:       #ffffff;
+  --sidebar-border:   #e2e8f0;
+  --sidebar-text:     #64748b;
+  --sidebar-active-bg:#eff6ff;
+  --sidebar-active-text: #2563eb;
+  --sidebar-hover:    #f8fafc;
+  --sidebar-name:     #0f172a;
+  --sidebar-width:    220px;
+  --sidebar-collapsed:56px;
+
+  /* ── Typography */
+  --text-primary:     #0f172a;
+  --text-secondary:   #334155;
+  --text-muted:       #64748b;
+  --text-disabled:    #94a3b8;
+
+  /* ── Inputs */
+  --input-bg:         #ffffff;
+  --input-border:     #cbd5e1;
+  --input-text:       #0f172a;
+  --input-placeholder:#94a3b8;
+
+  /* ── Semantic */
+  --success:          #16a34a;
+  --success-bg:       #f0fdf4;
+  --error:            #dc2626;
+  --error-bg:         #fef2f2;
+  --warning:          #d97706;
+  --warning-bg:       #fffbeb;
+  --info:             #0284c7;
+  --info-bg:          #f0f9ff;
+
+  /* ── Skeleton */
+  --skeleton:         #e2e8f0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE
+   ═══════════════════════════════════════════════════════════════ */
+.dark {
+  --accent:           #3b82f6;
+  --accent-hover:     #2563eb;
+  --accent-light:     #1e3a5f;
+  --accent-text:      #93c5fd;
+
+  --bg:               #020617;
+  --surface:          #0f172a;
+  --surface-raised:   #1e293b;
+  --border:           #1e293b;
+  --border-strong:    #334155;
+
+  --topbar-bg:        #020617;
+  --topbar-border:    rgba(255,255,255,0.07);
+  --topbar-text:      #e2e8f0;
+  --topbar-muted:     #64748b;
+
+  /* ── Sidebar (dark theme = very dark) */
+  --sidebar-bg:       #0a0f1e;
+  --sidebar-border:   #1e293b;
+  --sidebar-text:     #64748b;
+  --sidebar-active-bg:#1e3a5f;
+  --sidebar-active-text: #93c5fd;
+  --sidebar-hover:    #1e293b;
+  --sidebar-name:     #e2e8f0;
+
+  --text-primary:     #f1f5f9;
+  --text-secondary:   #cbd5e1;
+  --text-muted:       #94a3b8;
+  --text-disabled:    #475569;
+
+  --input-bg:         #0f172a;
+  --input-border:     #334155;
+  --input-text:       #f1f5f9;
+  --input-placeholder:#475569;
+
+  --success:          #4ade80;
+  --success-bg:       #052e16;
+  --error:            #f87171;
+  --error-bg:         #3b0a0a;
+  --warning:          #fbbf24;
+  --warning-bg:       #1c1000;
+  --info:             #38bdf8;
+  --info-bg:          #0c1a2e;
+
+  --skeleton:         #1e293b;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE RESET
+   ═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+button {
+  font-family: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Inputs ──────────────────────────────────────────────────── */
+input, select, textarea {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--input-text);
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: 8px;
+  padding: 9px 13px;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.2s;
+  outline: none;
+}
+input::placeholder, textarea::placeholder { color: var(--input-placeholder); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+input[type="checkbox"] { width: auto; accent-color: var(--accent); cursor: pointer; }
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.22s ease forwards; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--skeleton) 25%,
+    color-mix(in srgb, var(--skeleton) 60%, transparent) 50%,
+    var(--skeleton) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.7s linear infinite; }
+
+/* ═══════════════════════════════════════════════════════════════
+   REUSABLE COMPONENT CLASSES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Primary button */
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  padding: 9px 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+/* Ghost button */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+.btn-ghost:hover:not(:disabled) { background: var(--surface-raised); color: var(--text-primary); }
+
+/* Danger button */
+.btn-danger {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1.5px solid var(--error);
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+.btn-danger:hover:not(:disabled) { background: var(--error); color: #fff; }
+
+/* Card */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-error   { background: var(--error-bg);   color: var(--error);   }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.badge-info    { background: var(--info-bg);    color: var(--info);    }
+.badge-accent  { background: var(--accent-light); color: var(--accent-text); }
+
+/* Field error */
+.field-error {
+  font-size: 0.8rem;
+  color: var(--error);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Input error state */
+.input-error {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.1) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKWARD-COMPAT ALIASES
+   Maps old --color-* tokens to new tokens so any remaining
+   components that haven't been updated yet still render correctly.
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --color-primary:       var(--accent);
+  --color-primary-hover: var(--accent-hover);
+  --color-primary-light: var(--accent-light);
+  --color-secondary:     var(--topbar-bg);
+  --color-secondary-light: var(--surface-raised);
+  --color-accent:        var(--accent);
+  --color-bg:            var(--bg);
+  --color-card:          var(--surface);
+  --color-border:        var(--border);
+  --color-input-bg:      var(--input-bg);
+  --color-text:          var(--text-primary);
+  --color-text-muted:    var(--text-muted);
+  --color-error:         var(--error);
+  --color-error-light:   var(--error-bg);
+  --color-success:       var(--success);
+  --color-success-light: var(--success-bg);
+  --color-warning:       var(--warning);
+  --color-warning-light: var(--warning-bg);
+  --color-skeleton:      var(--skeleton);
+  --color-topbar:        var(--topbar-bg);
+  --color-topbar-border: var(--topbar-border);
+  --color-sidebar:       var(--sidebar-bg);
+  --color-sidebar-text:  var(--sidebar-text);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active:var(--sidebar-active-bg);
+  --color-sidebar-border:var(--sidebar-border);
+  --color-sidebar-name:  var(--sidebar-name);
+  /* accent-light alias */
+  --color-accent-light:   var(--accent-light);
+  --color-accent-text:    var(--accent-text);
+}
+
+/* Dark mode compat overrides */
+.dark {
+  --color-primary:       var(--accent);
+  --color-primary-hover: var(--accent-hover);
+  --color-primary-light: var(--accent-light);
+  --color-accent:        var(--accent);
+  --color-accent-light:  var(--accent-light);
+  --color-bg:            var(--bg);
+  --color-card:          var(--surface);
+  --color-border:        var(--border);
+  --color-input-bg:      var(--input-bg);
+  --color-text:          var(--text-primary);
+  --color-text-muted:    var(--text-muted);
+  --color-error:         var(--error);
+  --color-error-light:   var(--error-bg);
+  --color-success:       var(--success);
+  --color-success-light: var(--success-bg);
+  --color-warning:       var(--warning);
+  --color-warning-light: var(--warning-bg);
+  --color-skeleton:      var(--skeleton);
+  --color-topbar:        var(--topbar-bg);
+  --color-topbar-border: var(--topbar-border);
+  --color-sidebar:       var(--sidebar-bg);
+  --color-sidebar-text:  var(--sidebar-text);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active:var(--sidebar-active-bg);
+  --color-sidebar-border:var(--sidebar-border);
+  --color-sidebar-name:  var(--sidebar-name);
+  --color-accent-light:  var(--accent-light);
+  --color-accent-text:   var(--accent-text);
+}
