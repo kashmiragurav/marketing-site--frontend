@@ -38,7 +38,7 @@ function StatCard({ label, value, icon, valueColor, loading }) {
   )
 }
 
-function ProductRow({ product, onClick }) {
+function ProductRow({ product, onClick, showRating }) {
   return (
     <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', borderBottom: `1px solid ${T.border}`, transition: 'background 0.12s' }}
       onMouseEnter={e => { e.currentTarget.style.background = T.bg }}
@@ -50,7 +50,11 @@ function ProductRow({ product, onClick }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontSize: '0.8125rem', fontWeight: 500, color: T.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.title}</p>
-        <p style={{ fontSize: '0.7rem', color: T.muted, margin: '2px 0 0' }}>{product.category || 'General'}</p>
+        <p style={{ fontSize: '0.7rem', color: T.muted, margin: '2px 0 0' }}>
+          {showRating
+            ? <span style={{ color: '#f59e0b' }}>★ {Number(product.ratingsAverage || 0).toFixed(1)} <span style={{ color: T.muted }}>({product.ratingsCount || 0})</span></span>
+            : product.category || 'General'}
+        </p>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <p style={{ fontSize: '0.8125rem', fontWeight: 700, color: T.text, margin: 0 }}>₹{Number(product.price).toLocaleString('en-IN')}</p>
@@ -185,7 +189,7 @@ export default function DashboardPage() {
               ) : (
                 <div>
                   {items.map(p => (
-                    <ProductRow key={p._id} product={p} onClick={() => router.push(`/products/${p._id}`)} />
+                    <ProductRow key={String(p._id)} product={p} showRating={title === '⭐ Top Rated'} onClick={() => router.push(`/products/${p._id}`)} />
                   ))}
                 </div>
               )}

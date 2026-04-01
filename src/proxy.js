@@ -45,8 +45,9 @@ export function proxy(req) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  // Authenticated but wrong role for admin routes → dashboard
-  if (isAdminRoute && isAuthenticated && role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+  // Authenticated but wrong role for admin routes — normalise to lowercase
+  const normRole = (role || '').toLowerCase()
+  if (isAdminRoute && isAuthenticated && normRole !== 'admin' && normRole !== 'super_admin') {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 

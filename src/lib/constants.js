@@ -18,6 +18,13 @@ export const CATEGORY_ENUM = [
 // Frontend filter list — same values, same casing
 export const CATEGORIES = CATEGORY_ENUM
 
+// Role constants — use these everywhere instead of raw strings
+export const ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN:       'admin',
+  USER:        'user',
+}
+
 // Sort options — value maps to backend sortBy/order logic
 export const SORT_OPTIONS = [
   { value: 'createdAt',      label: 'Newest First' },
