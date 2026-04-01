@@ -91,7 +91,7 @@ export default function DashboardPage() {
         setRecent(data.recentProducts      || [])
         setLowStock(data.lowStockProducts  || [])
       } else {
-        console.error('Dashboard stats error:', data?.message)
+        console.error('Dashboard stats error:', data?.message || data)
       }
     } catch (e) {
       console.error('Dashboard load error:', e)
