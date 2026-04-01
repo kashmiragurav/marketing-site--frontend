@@ -19,11 +19,10 @@ export default function InventoryPage() {
   const [editProduct, setEditProduct] = useState(null)
   const [saving, setSaving]           = useState(false)
 
-  // ── Cursor-based infinite scroll ─────────────────────────────────────────
   const { products, total, loading, loadingMore, hasMore, loadMore, setProducts } =
     useInfiniteProducts({ search })
 
-  // ── Sentinel — callback ref so observer attaches the instant node mounts ─
+  // Callback ref — observer attaches the instant sentinel mounts, never stale
   const loadMoreRef = useRef(loadMore)
   useEffect(() => { loadMoreRef.current = loadMore }, [loadMore])
 
@@ -36,9 +35,8 @@ export default function InventoryPage() {
       { rootMargin: '400px', threshold: 0 }
     )
     observerRef.current.observe(node)
-  }, []) // stable — loadMoreRef.current is always current
+  }, [])
 
-  // ── Role check ────────────────────────────────────────────────────────────
   function canModify(product) {
     if (!user) return false
     const role  = (user.role || '').toLowerCase()
@@ -48,7 +46,6 @@ export default function InventoryPage() {
     return false
   }
 
-  // ── CRUD handlers ─────────────────────────────────────────────────────────
   async function handleDelete(id) {
     setDeleting(id)
     const { ok, data } = await api.deleteProduct(id)
@@ -65,14 +62,10 @@ export default function InventoryPage() {
   async function handleSave() {
     setSaving(true)
     const { ok, data } = await api.updateProduct(editProduct._id, {
-      title:       editProduct.title,
-      description: editProduct.description,
-      price:       Number(editProduct.price),
-      category:    editProduct.category,
-      image:       editProduct.image,
-      stock:       Number(editProduct.stock),
-      brand:       editProduct.brand,
-      sku:         editProduct.sku,
+      title: editProduct.title, description: editProduct.description,
+      price: Number(editProduct.price), category: editProduct.category,
+      image: editProduct.image, stock: Number(editProduct.stock),
+      brand: editProduct.brand, sku: editProduct.sku,
     })
     if (ok) {
       toast.success('Product updated', { id: 'upd-' + editProduct._id })
@@ -86,7 +79,6 @@ export default function InventoryPage() {
     setSaving(false)
   }
 
-  // ── Styles ────────────────────────────────────────────────────────────────
   const inp = {
     background: 'var(--input-bg)', color: 'var(--input-text)',
     border: '1.5px solid var(--input-border)', borderRadius: 8,
@@ -102,19 +94,11 @@ export default function InventoryPage() {
     <AppShell>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
           <div>
-            <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              Manage Products
-            </h1>
+            <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Manage Products</h1>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              {loading
-                ? '…'
-                : total != null
-                  ? `${total.toLocaleString()} products`
-                  : `${products.length}${hasMore ? '+' : ''} products`
-              }
+              {loading ? '…' : total != null ? `${total.toLocaleString()} products` : `${products.length}${hasMore ? '+' : ''} products`}
             </p>
           </div>
           <button onClick={() => router.push('/admin/products/add')}
@@ -123,14 +107,11 @@ export default function InventoryPage() {
           </button>
         </div>
 
-        {/* Search */}
-        <input
-          type="text" placeholder="Search by title or brand…" value={search}
+        <input type="text" placeholder="Search by title or brand…" value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ ...inp, maxWidth: 340, marginBottom: 18 }}
-        />
+          style={{ ...inp, maxWidth: 340, marginBottom: 18 }} />
 
-        {/* Initial skeleton */}
+        {/* Skeleton */}
         {loading && (
           <div className="card" style={{ overflow: 'hidden' }}>
             {[...Array(6)].map((_, i) => (
@@ -147,7 +128,7 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* Empty state */}
+        {/* Empty */}
         {!loading && products.length === 0 && (
           <div className="card" style={{ padding: '60px 24px', textAlign: 'center' }}>
             <p style={{ fontSize: '2.5rem', marginBottom: 12 }}>📦</p>
@@ -169,16 +150,12 @@ export default function InventoryPage() {
                 </thead>
                 <tbody>
                   {products.map(p => (
-                    <tr key={String(p._id)}
-                      style={{ borderBottom: '1px solid var(--border)' }}
+                    <tr key={String(p._id)} style={{ borderBottom: '1px solid var(--border)' }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-raised)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-                    >
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                       <td style={{ padding: '10px 14px' }}>
                         <div style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {p.image
-                            ? <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                            : <span style={{ fontSize: '1.2rem' }}>📦</span>}
+                          {p.image ? <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: '1.2rem' }}>📦</span>}
                         </div>
                       </td>
                       <td style={{ padding: '10px 14px', maxWidth: 200 }}>
@@ -186,16 +163,12 @@ export default function InventoryPage() {
                         {p.brand && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{p.brand}</p>}
                       </td>
                       <td style={{ padding: '10px 14px', color: 'var(--text-muted)' }}>{p.category || '—'}</td>
-                      <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        ₹{Number(p.price).toLocaleString('en-IN')}
-                      </td>
+                      <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--text-primary)' }}>₹{Number(p.price).toLocaleString('en-IN')}</td>
                       <td style={{ padding: '10px 14px' }}>
                         <span className="badge" style={{
                           background: p.stock > 5 ? 'var(--success-bg)' : p.stock > 0 ? 'var(--warning-bg)' : 'var(--error-bg)',
                           color:      p.stock > 5 ? 'var(--success)'    : p.stock > 0 ? 'var(--warning)'    : 'var(--error)',
-                        }}>
-                          {p.stock > 0 ? p.stock : 'Out'}
-                        </span>
+                        }}>{p.stock > 0 ? p.stock : 'Out'}</span>
                       </td>
                       <td style={{ padding: '10px 14px', color: 'var(--text-muted)' }}>
                         ⭐ {Number(p.ratingsAverage || 0).toFixed(1)} ({p.ratingsCount || 0})
@@ -215,16 +188,10 @@ export default function InventoryPage() {
                                   style={{ padding: '5px 12px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 700, background: 'var(--error)', color: '#fff', border: 'none', cursor: 'pointer' }}>
                                   {deleting === String(p._id) ? '…' : 'Confirm'}
                                 </button>
-                                <button onClick={() => setConfirmId(null)}
-                                  className="btn-ghost" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>
-                                  Cancel
-                                </button>
+                                <button onClick={() => setConfirmId(null)} className="btn-ghost" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>Cancel</button>
                               </>
                             ) : (
-                              <button onClick={() => setConfirmId(String(p._id))}
-                                className="btn-danger" style={{ padding: '5px 12px', fontSize: '0.8rem' }}>
-                                Delete
-                              </button>
+                              <button onClick={() => setConfirmId(String(p._id))} className="btn-danger" style={{ padding: '5px 12px', fontSize: '0.8rem' }}>Delete</button>
                             )}
                           </div>
                         ) : (
@@ -239,14 +206,11 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* Sentinel — ALWAYS outside all conditionals, never unmounts */}
+        {/* Sentinel — always outside all conditionals, never unmounts */}
         <div ref={sentinelRef} style={{ height: 1 }} aria-hidden="true" />
 
-        {/* Footer status */}
         <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
-          {loadingMore && (
-            <div style={{ width: 22, height: 22, border: '2.5px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%' }} className="spin" />
-          )}
+          {loadingMore && <div style={{ width: 22, height: 22, border: '2.5px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%' }} className="spin" />}
           {!loading && !loadingMore && !hasMore && products.length > 0 && (
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>All products loaded</p>
           )}
@@ -294,12 +258,10 @@ export default function InventoryPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-              <button onClick={handleSave} disabled={saving}
-                className="btn-primary" style={{ flex: 1, padding: '11px 0', fontSize: '0.9375rem' }}>
+              <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ flex: 1, padding: '11px 0', fontSize: '0.9375rem' }}>
                 {saving ? 'Saving…' : 'Save Changes'}
               </button>
-              <button onClick={() => setEditProduct(null)}
-                className="btn-ghost" style={{ flex: 1, padding: '11px 0', fontSize: '0.9375rem' }}>
+              <button onClick={() => setEditProduct(null)} className="btn-ghost" style={{ flex: 1, padding: '11px 0', fontSize: '0.9375rem' }}>
                 Cancel
               </button>
             </div>
