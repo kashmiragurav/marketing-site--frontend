@@ -27,11 +27,13 @@ export default function AppShell({ children }) {
     setSearchInput(params.get('search') || '')
   }, [pathname])
 
-  // Debounced search navigation
+  // Debounced search navigation — only navigate from product-related pages
+  // Inventory page has its own search, so skip navigation from there
   useEffect(() => {
     if (isFirstSearch.current) { isFirstSearch.current = false; return }
     const q = debouncedSearch.trim()
-    if (pathname.startsWith('/products') || q) {
+    // Only navigate if already on /products page, or if explicitly searching from a non-inventory page
+    if (pathname.startsWith('/products')) {
       router.push(q ? `/products?search=${encodeURIComponent(q)}` : '/products')
     }
   }, [debouncedSearch]) // eslint-disable-line
