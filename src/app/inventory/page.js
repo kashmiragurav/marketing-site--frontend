@@ -19,11 +19,11 @@ export default function InventoryPage() {
   const [editProduct, setEditProduct] = useState(null)
   const [saving, setSaving]           = useState(false)
 
-  // ── Cursor-based infinite scroll via shared hook ──────────────────────────
+  // ── Cursor-based infinite scroll ─────────────────────────────────────────
   const { products, total, loading, loadingMore, hasMore, loadMore, setProducts } =
     useInfiniteProducts({ search })
 
-  // ── Infinite scroll — callback ref attaches observer when sentinel mounts ─
+  // ── Sentinel — callback ref so observer attaches the instant node mounts ─
   const loadMoreRef = useRef(loadMore)
   useEffect(() => { loadMoreRef.current = loadMore }, [loadMore])
 
@@ -36,9 +36,9 @@ export default function InventoryPage() {
       { rootMargin: '400px', threshold: 0 }
     )
     observerRef.current.observe(node)
-  }, [])
+  }, []) // stable — loadMoreRef.current is always current
 
-  // ── Role check — normalised to lowercase ─────────────────────────────────
+  // ── Role check ────────────────────────────────────────────────────────────
   function canModify(product) {
     if (!user) return false
     const role  = (user.role || '').toLowerCase()
@@ -48,7 +48,7 @@ export default function InventoryPage() {
     return false
   }
 
-  // ── CRUD ──────────────────────────────────────────────────────────────────
+  // ── CRUD handlers ─────────────────────────────────────────────────────────
   async function handleDelete(id) {
     setDeleting(id)
     const { ok, data } = await api.deleteProduct(id)
@@ -86,6 +86,7 @@ export default function InventoryPage() {
     setSaving(false)
   }
 
+  // ── Styles ────────────────────────────────────────────────────────────────
   const inp = {
     background: 'var(--input-bg)', color: 'var(--input-text)',
     border: '1.5px solid var(--input-border)', borderRadius: 8,
@@ -108,9 +109,11 @@ export default function InventoryPage() {
               Manage Products
             </h1>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              {loading ? '…' : total != null
-                ? `${total.toLocaleString()} products`
-                : `${products.length}${hasMore ? '+' : ''} products`
+              {loading
+                ? '…'
+                : total != null
+                  ? `${total.toLocaleString()} products`
+                  : `${products.length}${hasMore ? '+' : ''} products`
               }
             </p>
           </div>
@@ -152,7 +155,7 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* Table — renders as soon as first batch arrives */}
+        {/* Table */}
         {products.length > 0 && (
           <div className="card" style={{ overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
@@ -236,10 +239,10 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* Sentinel — ALWAYS outside all conditionals so observer never loses its target */}
+        {/* Sentinel — ALWAYS outside all conditionals, never unmounts */}
         <div ref={sentinelRef} style={{ height: 1 }} aria-hidden="true" />
 
-        {/* Footer */}
+        {/* Footer status */}
         <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
           {loadingMore && (
             <div style={{ width: 22, height: 22, border: '2.5px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%' }} className="spin" />

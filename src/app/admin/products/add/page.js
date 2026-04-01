@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import AppShell from '../../components/AppShell'
-import { api } from '../../components/api'
-import { CATEGORIES } from '../../../lib/constants'
+import AppShell from '../../../components/AppShell'
+import { api } from '../../../components/api'
+import { CATEGORIES } from '../../../../lib/constants'
 import toast from 'react-hot-toast'
 
 const INIT = { title: '', price: '', stock: '', category: '', brand: '', sku: '', image: '', tags: '', description: '' }
