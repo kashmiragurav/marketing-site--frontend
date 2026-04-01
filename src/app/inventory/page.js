@@ -29,6 +29,10 @@ export default function InventoryPage() {
   const isFetching   = useRef(false)
 
   function canModify(product) {
+    // console.log("product", product);
+    // console.log("user", user);
+    
+    
     if (!user) return false
     const owner = product.createdBy?._id || product.createdBy
     return !owner || String(owner) === String(user._id) || user.role === 'admin'
@@ -214,7 +218,7 @@ export default function InventoryPage() {
                                 className="btn-ghost" style={{ padding: '5px 12px', fontSize: '0.8rem' }}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--accent)' }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
-                                Edit
+                                Edit  
                               </button>
                               {confirmId === String(p._id) ? (
                                 <>
