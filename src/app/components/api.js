@@ -3,9 +3,23 @@
  * credentials:'include' sends the HttpOnly auth cookie automatically.
  *
  * Import: import { api } from '@/app/components/api'
+ *
+ * Hapi note: Boom errors return { statusCode, error, message }.
+ * normalizeData() flattens this to { message } so all existing
+ * callers that read data.message continue to work unchanged.
  */
 
 const BASE = '/api'
+
+// Hapi Boom errors: { statusCode, error, message }
+// Express errors:   { message }
+// Normalize both to { message } so callers need no changes
+function normalizeData(data) {
+  if (data && data.statusCode && data.error && data.message) {
+    return { message: data.message }
+  }
+  return data
+}
 
 async function req(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {
@@ -13,7 +27,8 @@ async function req(path, opts = {}) {
     headers: { 'Content-Type': 'application/json', ...opts.headers },
     ...opts,
   })
-  const data = await res.json().catch(() => ({}))
+  const raw  = await res.json().catch(() => ({}))
+  const data = normalizeData(raw)
   return { ok: res.ok, status: res.status, data }
 }
 
