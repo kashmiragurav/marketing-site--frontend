@@ -1,10 +1,10 @@
 'use client'
 
-import { useRef, useState,useEffect, Suspense } from 'react'
+import { useRef, useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
-import { useProducts } from '../../hooks/useProducts'
+import { useInfiniteProducts } from '../../hooks/useInfiniteProducts'
 import AppShell from '../components/AppShell'
 import { api } from '../components/api'
 import toast from 'react-hot-toast'
@@ -249,26 +249,27 @@ function ProductsContent() {
     router.replace(`/products?${p.toString()}`, { scroll: false })
   }
 
-  const { products, total, loading, loadingMore, hasMore, loadMore, setProducts } =
-    useProducts({ search: urlSearch, category, sort, inStock, minPrice, maxPrice, minRating })
+  const { products, loading, loadingMore, hasMore, loadMore, setProducts } =
+    useInfiniteProducts({ search: urlSearch, category, sort, inStock, minPrice, maxPrice, minRating })
 
   const [adding, setAdding]                 = useState(null)
   const [hoveredStar, setHoveredStar]       = useState({})
   const [submittingRate, setSubmittingRate] = useState(null)
 
-  // Infinite scroll — sentinel is always in DOM, observer attaches once
-  const sentinelRef = useRef(null)
-  const observerRef = useRef(null)
+  // ── Infinite scroll ──────────────────────────────────────────────────────────────
   const loadMoreRef = useRef(loadMore)
   useEffect(() => { loadMoreRef.current = loadMore }, [loadMore])
 
-  useEffect(() => {
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) loadMoreRef.current()
-    }, { rootMargin: '300px', threshold: 0 })
-    if (sentinelRef.current) observerRef.current.observe(sentinelRef.current)
-    return () => observerRef.current?.disconnect()
-  }, []) // attach once only
+  const observerRef = useRef(null)
+  const sentinelRef = useCallback(node => {
+    if (observerRef.current) { observerRef.current.disconnect(); observerRef.current = null }
+    if (!node) return
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMoreRef.current() },
+      { rootMargin: '400px', threshold: 0 }
+    )
+    observerRef.current.observe(node)
+  }, [])
 
   async function handleAddToCart(productId) {
     if (!user) { router.push('/login'); return }
@@ -308,13 +309,15 @@ function ProductsContent() {
       />
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <SortBar sort={sort} setSort={setSort} total={total} loading={loading} urlSearch={urlSearch} category={category} />
+        <SortBar sort={sort} setSort={setSort} total={products.length} loading={loading} urlSearch={urlSearch} category={category} />
 
-        {loading ? (
+        {loading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
-        ) : products.length === 0 ? (
+        )}
+
+        {!loading && products.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
             <p style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔍</p>
             <p style={{ fontSize: '1rem', fontWeight: 600, color: T.text }}>No products found</p>
@@ -325,86 +328,88 @@ function ProductsContent() {
               </button>
             )}
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-              {products.map(product => {
-                const id  = String(product._id)
-                const avg = product.ratingsAverage ?? 0
-                const cnt = product.ratingsCount   ?? 0
-                return (
-                  <div key={id} className="fade-in" style={{
-                    background: T.card, border: `1px solid ${T.border}`,
-                    borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                    transition: 'box-shadow 0.15s',
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.1)' }}
-                    onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
-                  >
-                    <div style={{ height: 155, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, background: T.bg, cursor: 'pointer' }}
-                      onClick={() => router.push(`/products/${id}`)}>
-                      {product.image
-                        ? <img src={product.image} alt={product.title} style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
-                        : <span style={{ fontSize: '2.5rem' }}>📦</span>}
-                    </div>
-
-                    <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: T.text, marginBottom: 4, cursor: 'pointer', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
-                        onClick={() => router.push(`/products/${id}`)}>
-                        {product.title}
-                      </p>
-
-                      <p style={{ fontSize: '0.7rem', color: T.muted, marginBottom: 4 }}>
-                        {product.category || 'General'}
-                      </p>
-
-                      {/* Stars */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 6 }}>
-                        {[1,2,3,4,5].map(star => (
-                          <button key={star} disabled={submittingRate === id}
-                            onClick={() => handleRate(id, star)}
-                            onMouseEnter={() => setHoveredStar(p => ({ ...p, [id]: star }))}
-                            onMouseLeave={() => setHoveredStar(p => ({ ...p, [id]: 0 }))}
-                            style={{ background: 'none', padding: 0, fontSize: '0.85rem', lineHeight: 1, cursor: 'pointer', border: 'none' }}>
-                            <span style={{ color: (hoveredStar[id] >= star || (!hoveredStar[id] && Math.round(avg) >= star)) ? '#f59e0b' : T.border }}>★</span>
-                          </button>
-                        ))}
-                        <span style={{ fontSize: '0.68rem', color: T.muted, marginLeft: 2 }}>
-                          {cnt > 0 ? `${avg.toFixed(1)} (${cnt})` : 'No ratings'}
-                        </span>
-                      </div>
-
-                      <p style={{ fontSize: '0.7rem', fontWeight: 600, marginBottom: 8, color: product.stock > 0 ? 'var(--success)' : 'var(--error)' }}>
-                        {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
-                      </p>
-
-                      <p style={{ fontSize: '1rem', fontWeight: 700, color: T.text, marginTop: 'auto', marginBottom: 8 }}>
-                        ₹{Number(product.price).toLocaleString('en-IN')}
-                      </p>
-
-                      <button onClick={() => handleAddToCart(id)}
-                        disabled={adding === id || product.stock <= 0}
-                        style={{
-                          width: '100%', padding: '8px 0', borderRadius: 8,
-                          fontSize: '0.8rem', fontWeight: 700, border: 'none', cursor: 'pointer',
-                          background: adding === id || product.stock <= 0 ? T.border : T.accent,
-                          color: adding === id || product.stock <= 0 ? T.muted : '#fff',
-                          transition: 'background 0.15s',
-                        }}>
-                        {adding === id ? 'Adding…' : product.stock <= 0 ? 'Out of Stock' : user ? 'Add to Cart' : 'Sign in to Buy'}
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            <div ref={sentinelRef} style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16 }}>
-              {loadingMore && <div style={{ width: 22, height: 22, border: `2px solid ${T.accent}`, borderTopColor: 'transparent', borderRadius: '50%' }} className="spin" />}
-              {!hasMore && products.length > 0 && <p style={{ fontSize: '0.8rem', color: T.muted }}>All products loaded</p>}
-            </div>
-          </>
         )}
+
+        {!loading && products.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+            {products.map(product => {
+              const id  = String(product._id)
+              const avg = product.ratingsAverage ?? 0
+              const cnt = product.ratingsCount   ?? 0
+              return (
+                <div key={id} className="fade-in" style={{
+                  background: T.card, border: `1px solid ${T.border}`,
+                  borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                  transition: 'box-shadow 0.15s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.1)' }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
+                >
+                  <div style={{ height: 155, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, background: T.bg, cursor: 'pointer' }}
+                    onClick={() => router.push(`/products/${id}`)}>
+                    {product.image
+                      ? <img src={product.image} alt={product.title} style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                      : <span style={{ fontSize: '2.5rem' }}>📦</span>}
+                  </div>
+
+                  <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: T.text, marginBottom: 4, cursor: 'pointer', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                      onClick={() => router.push(`/products/${id}`)}>
+                      {product.title}
+                    </p>
+
+                    <p style={{ fontSize: '0.7rem', color: T.muted, marginBottom: 4 }}>
+                      {product.category || 'General'}
+                    </p>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 6 }}>
+                      {[1,2,3,4,5].map(star => (
+                        <button key={star} disabled={submittingRate === id}
+                          onClick={() => handleRate(id, star)}
+                          onMouseEnter={() => setHoveredStar(p => ({ ...p, [id]: star }))}
+                          onMouseLeave={() => setHoveredStar(p => ({ ...p, [id]: 0 }))}
+                          style={{ background: 'none', padding: 0, fontSize: '0.85rem', lineHeight: 1, cursor: 'pointer', border: 'none' }}>
+                          <span style={{ color: (hoveredStar[id] >= star || (!hoveredStar[id] && Math.round(avg) >= star)) ? '#f59e0b' : T.border }}>★</span>
+                        </button>
+                      ))}
+                      <span style={{ fontSize: '0.68rem', color: T.muted, marginLeft: 2 }}>
+                        {cnt > 0 ? `${avg.toFixed(1)} (${cnt})` : 'No ratings'}
+                      </span>
+                    </div>
+
+                    <p style={{ fontSize: '0.7rem', fontWeight: 600, marginBottom: 8, color: product.stock > 0 ? 'var(--success)' : 'var(--error)' }}>
+                      {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
+                    </p>
+
+                    <p style={{ fontSize: '1rem', fontWeight: 700, color: T.text, marginTop: 'auto', marginBottom: 8 }}>
+                      ₹{Number(product.price).toLocaleString('en-IN')}
+                    </p>
+
+                    <button onClick={() => handleAddToCart(id)}
+                      disabled={adding === id || product.stock <= 0}
+                      style={{
+                        width: '100%', padding: '8px 0', borderRadius: 8,
+                        fontSize: '0.8rem', fontWeight: 700, border: 'none', cursor: 'pointer',
+                        background: adding === id || product.stock <= 0 ? T.border : T.accent,
+                        color: adding === id || product.stock <= 0 ? T.muted : '#fff',
+                        transition: 'background 0.15s',
+                      }}>
+                      {adding === id ? 'Adding…' : product.stock <= 0 ? 'Out of Stock' : user ? 'Add to Cart' : 'Sign in to Buy'}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Sentinel — always in DOM, never inside any conditional */}
+        <div ref={sentinelRef} style={{ height: 1 }} aria-hidden="true" />
+
+        <div style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+          {loadingMore && <div style={{ width: 22, height: 22, border: `2px solid ${T.accent}`, borderTopColor: 'transparent', borderRadius: '50%' }} className="spin" />}
+          {!loading && !loadingMore && !hasMore && products.length > 0 && <p style={{ fontSize: '0.8rem', color: T.muted }}>All products loaded</p>}
+        </div>
       </div>
     </div>
   )

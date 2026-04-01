@@ -74,32 +74,26 @@ export default function DashboardPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      // Try the aggregated endpoint first; fall back to parallel calls if not available
-      const statsRes = await api.getDashboardStats()
-      if (statsRes.ok && statsRes.data.total !== undefined) {
-        const d = statsRes.data
-        setStats({ total: d.total, inStock: d.inStock, outOfStock: d.outOfStock, topRated: d.topRated, stockRate: d.stockRate })
-        setTopRated(d.topRatedProducts  || [])
-        setRecent(d.recentProducts      || [])
-        setLowStock(d.lowStockProducts  || [])
+      const { ok, data } = await api.getDashboardStats()
+      if (ok) {
+        setStats({
+          total:      data.total      ?? 0,
+          inStock:    data.inStock    ?? 0,
+          outOfStock: data.outOfStock ?? 0,
+          topRated:   data.topRated   ?? 0,
+          stockRate:  data.stockRate  ?? 0,
+        })
+        setTopRated(data.topRatedProducts  || [])
+        setRecent(data.recentProducts      || [])
+        setLowStock(data.lowStockProducts  || [])
       } else {
-        // Fallback: parallel product queries
-        const [allRes, stockRes, topRes, recentRes, lowRes] = await Promise.all([
-          api.getProducts({ limit: 1 }),
-          api.getProducts({ inStock: 'true', limit: 1 }),
-          api.getProducts({ sortBy: 'ratingsAverage', order: 'desc', limit: 5 }),
-          api.getProducts({ sortBy: 'createdAt', order: 'desc', limit: 5 }),
-          api.getProducts({ sortBy: 'stock', order: 'asc', limit: 5, inStock: 'true' }),
-        ])
-        const total   = allRes.data.total   || 0
-        const inStock = stockRes.data.total || 0
-        setStats({ total, inStock, outOfStock: total - inStock, topRated: (topRes.data.products || []).filter(p => p.ratingsAverage >= 4).length, stockRate: total > 0 ? Math.round((inStock / total) * 100) : 0 })
-        setTopRated(topRes.data.products  || [])
-        setRecent(recentRes.data.products || [])
-        setLowStock(lowRes.data.products  || [])
+        console.error('Dashboard stats error:', data?.message)
       }
-    } catch (e) { console.error(e) }
-    finally { setLoading(false) }
+    } catch (e) {
+      console.error('Dashboard load error:', e)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   // Fetch on mount
