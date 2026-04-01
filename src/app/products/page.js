@@ -180,7 +180,10 @@ function SortBar({ sort, setSort, total, loading, urlSearch, category }) {
           {urlSearch ? `"${urlSearch}"` : category || 'All Products'}
         </span>
         <span style={{ fontSize: '0.8rem', color: T.muted, marginLeft: 8 }}>
-          {loading ? '…' : `${total} result${total !== 1 ? 's' : ''}`}
+          {loading || total === null
+            ? '…'
+            : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`
+          }
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -212,7 +215,7 @@ function ProductsContent() {
   const { user }     = useAuth()
   const { refresh: refreshCart } = useCart()
 
-  // All filter state is derived from URL — survives reload
+  // All filter state read from URL — survives hard reload
   const urlSearch  = searchParams.get('search')   || ''
   const category   = searchParams.get('category') || ''
   const sort       = searchParams.get('sort')      || 'createdAt'
@@ -221,35 +224,40 @@ function ProductsContent() {
   const maxPrice   = searchParams.get('maxPrice')  || ''
   const minRating  = Number(searchParams.get('minRating') || 0)
 
+  // hasFilters drives the "Clear All" button visibility
   const hasFilters = !!(category || inStock || minPrice || maxPrice || minRating > 0)
 
-  // Update a single filter param in the URL without losing others
+  // Write a filter to URL. Pass null/undefined/''/false/0 to remove it.
   function setParam(key, value) {
     const p = new URLSearchParams(searchParams.toString())
-    if (!value || value === '0' || value === 'false' || value === 'createdAt') {
-      p.delete(key)
-    } else {
-      p.set(key, String(value))
-    }
-    // Reset to page 1 on filter change
-    p.delete('page')
+    const shouldRemove =
+      value === null ||
+      value === undefined ||
+      value === '' ||
+      value === false ||
+      value === 0
+    if (shouldRemove) p.delete(key)
+    else              p.set(key, String(value))
     router.replace(`/products?${p.toString()}`, { scroll: false })
   }
 
-  function setCategory(v)  { setParam('category', v) }
-  function setSort(v)      { setParam('sort', v) }
-  function setInStock(v)   { setParam('inStock', v ? 'true' : '') }
-  function setMinPrice(v)  { setParam('minPrice', v) }
-  function setMaxPrice(v)  { setParam('maxPrice', v) }
-  function setMinRating(v) { setParam('minRating', v > 0 ? String(v) : '') }
+  // Each setter converts its value to the right type before writing
+  function setCategory(v)  { setParam('category',  v || null) }
+  function setSort(v)      { setParam('sort',       v || null) }
+  function setInStock(v)   { setParam('inStock',    v ? 'true' : null) }
+  function setMinPrice(v)  { setParam('minPrice',   v !== '' ? v : null) }
+  function setMaxPrice(v)  { setParam('maxPrice',   v !== '' ? v : null) }
+  function setMinRating(v) { setParam('minRating',  Number(v) > 0 ? v : null) }
 
   function clearAllFilters() {
     const p = new URLSearchParams()
     if (urlSearch) p.set('search', urlSearch)
+    // preserve sort — clearing filters should not reset sort order
+    if (sort) p.set('sort', sort)
     router.replace(`/products?${p.toString()}`, { scroll: false })
   }
 
-  const { products, loading, loadingMore, hasMore, loadMore, setProducts } =
+  const { products, total, loading, loadingMore, hasMore, loadMore, setProducts } =
     useInfiniteProducts({ search: urlSearch, category, sort, inStock, minPrice, maxPrice, minRating })
 
   const [adding, setAdding]                 = useState(null)
@@ -309,7 +317,7 @@ function ProductsContent() {
       />
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <SortBar sort={sort} setSort={setSort} total={products.length} loading={loading} urlSearch={urlSearch} category={category} />
+        <SortBar sort={sort} setSort={setSort} total={total} loading={loading} urlSearch={urlSearch} category={category} />
 
         {loading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">

@@ -21,6 +21,7 @@ export function useInfiniteProducts(filters = {}) {
   } = filters
 
   const [products, setProducts]       = useState([])
+  const [total, setTotal]             = useState(null)  // null = not yet loaded
   const [loading, setLoading]         = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore]         = useState(false)
@@ -65,6 +66,8 @@ export function useInfiniteProducts(filters = {}) {
       if (isReset) {
         // Full replace — no dedup needed, this is a clean slate
         setProducts(incoming)
+        // Total comes from the first (reset) fetch — reflects current filter
+        if (data.total != null) setTotal(data.total)
       } else {
         // Map-based dedup — O(n), guarantees unique _id keys, no duplicate key errors
         setProducts(prev => {
@@ -98,6 +101,7 @@ export function useInfiniteProducts(filters = {}) {
     cursorRef.current  = null
     hasMoreRef.current = false
     setProducts([])
+    setTotal(null)  // reset total so SortBar shows skeleton until new count arrives
     setHasMore(false)
     fetchNext(true, gen)
   }, [fetchNext])
@@ -108,5 +112,5 @@ export function useInfiniteProducts(filters = {}) {
     fetchNext(false, genRef.current)
   }, [fetchNext])
 
-  return { products, loading, loadingMore, hasMore, loadMore, setProducts }
+  return { products, total, loading, loadingMore, hasMore, loadMore, setProducts }
 }
